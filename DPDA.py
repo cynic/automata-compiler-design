@@ -1,3 +1,5 @@
+import NFA
+
 class DPDA:
   def __init__(self, states, input_alphabet, stack_alphabet, transitions, start_state, start_stack_symbol, accept_states):
     self.states = states
@@ -16,9 +18,16 @@ class DPDA:
 
   def accepts(self, input_string):
     # print(f"\n*** Checking: {input_string}; starting at {self.current_state}")
+    self.__input_string = input_string
+    self.__skip = 0
+    self.__count = 0
     for symbol in input_string:
+      self.__count += 1
+      if self.__skip > 0:
+        self.__skip -= 1
+        # print(f"Skipping: {symbol}")
+        continue
       # print(f"Processing: {symbol}, stack = {self.stack}")
-      # Check for a valid transition
       if not self.step(symbol):
         return False
       # print(f"At the end of the step, state = {self.current_state}, stack = {self.stack}")
@@ -39,7 +48,7 @@ class DPDA:
     if self.current_state in self.transitions:
       return self.accept_symbol(self.transitions[self.current_state], symbol)
     # else:
-    #   # print(f"State {self.current_state} not in transitions")
+    #   print(f"State {self.current_state} not in transitions")
     #   return False
 
   def accept_symbol(self, symbol_dict, symbol):
@@ -76,23 +85,82 @@ class DPDA:
       for sym in pushed:
         # print(f"Pushing: {sym}")
         self.stack.append(sym)
-    return True
 
-class ArithmeticRecognizer:
+    # We have ended up… somewhere.
+    # If we now need to recognize something with a custom recognizer, do it.
+    if self.current_state in self.transitions and \
+       'recognizer' in self.transitions[self.current_state]:
+      # print(f"Using custom recognizer.")
+      custom = self.transitions[self.current_state]['recognizer']
+      result = custom.accepts(self.__input_string[self.__count-1:])
+      if not result:
+        # print(f"Rejected by inner recognizer: {input_string[self.__count-1:]}")
+        return False
+      else:
+        self.__skip = custom.accepted_length() - 1
+        return True
+    else:
+      return True
+
+class ArithmeticExpressionRecognizer:
   def __init__(self):
-    states = {'q0', 'Add', 'Sub', 'End'}
-    input_alphabet = {'(', ')'}
+    num_recognizer = NFA.NumberRecognizer()
+    states = {'S', 'Operand', 'Open', 'Num', 'Close', 'End'}
+    # union of alphabets
+    input_alphabet = num_recognizer.nfa.alphabet | {'(', ')'}
     stack_alphabet = {'B', '1'}
     transitions = {
         # From -> Symbol -> Stack -> (To, StackOperation)
-        'q0':   { None: { None: ('Add', None)  } },
-        'Add':  { '(':  { None: ('Add', ['1']) },
-                  ')':  { '1':  ('Sub', None)  } },
-        'Sub':  { '(':  { None: ('Add', ['1']) },
-                  ')':  { '1':  ('Sub', None)  },
-                  None: { 'B':  ('End', None)  } }
+        'S':        { None: { None: ('Operand', None ) } },
+        'Operand':  { ' ':  { None: ('Operand', None ) },
+                      '0':  { None: ('Num'    , None ) },
+                      '1':  { None: ('Num'    , None ) },
+                      '2':  { None: ('Num'    , None ) },
+                      '3':  { None: ('Num'    , None ) },
+                      '4':  { None: ('Num'    , None ) },
+                      '5':  { None: ('Num'    , None ) },
+                      '6':  { None: ('Num'    , None ) },
+                      '7':  { None: ('Num'    , None ) },
+                      '8':  { None: ('Num'    , None ) },
+                      '9':  { None: ('Num'    , None ) },
+                      '-':  { None: ('Num'    , None ) },
+                      '(':  { None: ('Open'   , ['1']) },
+                    },
+        'Open':     { ' ':  { None: ('Open'   , None ) },
+                      '(':  { None: ('Open'   , ['1']) },
+                      '0':  { None: ('Num'    , None ) },
+                      '1':  { None: ('Num'    , None ) },
+                      '2':  { None: ('Num'    , None ) },
+                      '3':  { None: ('Num'    , None ) },
+                      '4':  { None: ('Num'    , None ) },
+                      '5':  { None: ('Num'    , None ) },
+                      '6':  { None: ('Num'    , None ) },
+                      '7':  { None: ('Num'    , None ) },
+                      '8':  { None: ('Num'    , None ) },
+                      '9':  { None: ('Num'    , None ) },
+                      '-':  { None: ('Num'    , None ) }
+                    },
+        'Num':      { None: { 'B':  ('End'    , None ) },
+                      '+':  { None: ('Operand', None ) },
+                      '-':  { None: ('Operand', None ) },
+                      '*':  { None: ('Operand', None ) },
+                      '/':  { None: ('Operand', None ) },
+                      '%':  { None: ('Operand', None ) },
+                      ' ':  { None: ('Close'  , None ) },
+                      ')':  { '1':  ('Close'  , None ) },
+                      'recognizer': num_recognizer
+                    },
+        'Close':    { None: { 'B':  ('End'    , None ) },
+                      ' ':  { None: ('Close'  , None ) },
+                      ')':  { '1':  ('Close'  , None ) },
+                      '+':  { None: ('Operand', None ) },
+                      '-':  { None: ('Operand', None ) },
+                      '*':  { None: ('Operand', None ) },
+                      '/':  { None: ('Operand', None ) },
+                      '%':  { None: ('Operand', None ) }
+                    }
         }
-    start_state = 'q0'
+    start_state = 'S'
     start_stack_symbol = 'B'
     accept_states = {'End'}
 
@@ -104,34 +172,54 @@ class ArithmeticRecognizer:
     return self.dpda.accepts(string)
 
 # TESTING:
-states = {'q0', 'Add', 'Sub', 'End'}
-input_alphabet = {'(', ')'}
-stack_alphabet = {'B', '1'}
-transitions = {
-    # From -> Symbol -> Stack -> (To, StackOperation)
-    'q0':   { None: { None: ('Add', None)    } },
-    'Add':  { '(':  { None: ('Add', ['1']) },
-              ')':  { '1':  ('Sub', None)  } },
-    'Sub':  { '(':  { None: ('Add', ['1']) },
-              ')':  { '1':  ('Sub', None)  },
-              None: { 'B':  ('End', None)  } }
-    }
-start_state = 'q0'
-start_stack_symbol = 'B'
-accept_states = {'End'}
+# states = {'q0', 'Add', 'Sub', 'End'}
+# input_alphabet = {'(', ')'}
+# stack_alphabet = {'B', '1'}
+# transitions = {
+#     # From -> Symbol -> Stack -> (To, StackOperation)
+#     'q0':   { None: { None: ('Add', None)    } },
+#     'Add':  { '(':  { None: ('Add', ['1']) },
+#               ')':  { '1':  ('Sub', None)  } },
+#     'Sub':  { '(':  { None: ('Add', ['1']) },
+#               ')':  { '1':  ('Sub', None)  },
+#               None: { 'B':  ('End', None)  } }
+#     }
+# start_state = 'q0'
+# start_stack_symbol = 'B'
+# accept_states = {'End'}
 
-# Create DPDA instance
-dpda = DPDA(states, input_alphabet, stack_alphabet, transitions, start_state, start_stack_symbol, accept_states)
+# # Create DPDA instance
+# dpda = DPDA(states, input_alphabet, stack_alphabet, transitions, start_state, start_stack_symbol, accept_states)
 
-# Test the DPDA
+# # Test the DPDA
+# test_inputs = [
+#   "()", "(())", "((()))", "(()())", "()()", "()(())()", "(", "())", "((())",
+#   "(()))", "()(", ")(())()", ")", "(()", "(()))", "(()()", ")()", "(())()"
+#   ]
+
+# for input_string in test_inputs:
+#   dpda.reset()
+#   if dpda.accepts(input_string):
+#     print(f"{input_string} is accepted.")
+#   else:
+#     print(f"{input_string} is rejected.")
+
+arithmetic = ArithmeticExpressionRecognizer()
 test_inputs = [
-  "()", "(())", "((()))", "(()())", "()()", "()(())()", "(", "())", "((())",
-  "(()))", "()(", ")(())()", ")", "(()", "(()))", "(()()", ")()", "(())()"
+  "1",
+  "(1)",
+  "(1+3)",
+  "((2-5)+1-8)",
+  "((2-5)+(1-8))",
+  "((2-5)+(1-8))*(3)",
+  "((2-5)+(1-8)+2)",
+  "6+(8-7)+4/(9*0)%2",
+  " 6 + ( 8 - 7 ) + 4 / ( 9 * 0 ) % 2 ",
+  "  6  +  (  8  -  7  )  +  4  /  (  9  *  0  )  %  2  ",
+  "6+((8-7)+4)/9*(0%2))"
   ]
-
 for input_string in test_inputs:
-  dpda.reset()
-  if dpda.accepts(input_string):
+  if arithmetic.accepts(input_string):
     print(f"{input_string} is accepted.")
   else:
     print(f"{input_string} is rejected.")
