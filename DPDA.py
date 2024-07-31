@@ -105,7 +105,7 @@ class DPDA:
 class ArithmeticExpressionRecognizer:
   def __init__(self):
     num_recognizer = NFA.NumberRecognizer()
-    states = {'S', 'Operand', 'Open', 'Num', 'Close', 'End'}
+    states = {'S', 'Operand', 'Open', 'Num', 'Negate', 'Close', 'End'}
     # union of alphabets
     input_alphabet = num_recognizer.nfa.alphabet | {'(', ')'}
     stack_alphabet = {'B', '1'}
@@ -123,8 +123,8 @@ class ArithmeticExpressionRecognizer:
                       '7':  { None: ('Num'    , None ) },
                       '8':  { None: ('Num'    , None ) },
                       '9':  { None: ('Num'    , None ) },
-                      '-':  { None: ('Num'    , None ) },
-                      '(':  { None: ('Open'   , ['1']) },
+                      '-':  { None: ('Negate' , None ) },
+                      '(':  { None: ('Open'   , ['1']) }
                     },
         'Open':     { ' ':  { None: ('Open'   , None ) },
                       '(':  { None: ('Open'   , ['1']) },
@@ -138,7 +138,19 @@ class ArithmeticExpressionRecognizer:
                       '7':  { None: ('Num'    , None ) },
                       '8':  { None: ('Num'    , None ) },
                       '9':  { None: ('Num'    , None ) },
-                      '-':  { None: ('Num'    , None ) }
+                      '-':  { None: ('Negate' , None ) }
+                    },
+        'Negate':   { '(':  { None: ('Open'   , ['1']) },
+                      '0':  { None: ('Num'    , None ) },
+                      '1':  { None: ('Num'    , None ) },
+                      '2':  { None: ('Num'    , None ) },
+                      '3':  { None: ('Num'    , None ) },
+                      '4':  { None: ('Num'    , None ) },
+                      '5':  { None: ('Num'    , None ) },
+                      '6':  { None: ('Num'    , None ) },
+                      '7':  { None: ('Num'    , None ) },
+                      '8':  { None: ('Num'    , None ) },
+                      '9':  { None: ('Num'    , None ) }
                     },
         'Num':      { None: { 'B':  ('End'    , None ) },
                       '+':  { None: ('Operand', None ) },
@@ -213,6 +225,10 @@ test_inputs = [
   "((2-5)+(1-8))",
   "((2-5)+(1-8))*(3)",
   "((2-5)+(1-8)+2)",
+  "((-2--5)--(-1--8)--2)",
+  "((-2--5)--(-1---8)--2)",
+  "((-2--5)---(-1---8)--2)",
+  "((--2--5)---(-1---8)--2)",
   "6+(8-7)+4/(9*0)%2",
   " 6 + ( 8 - 7 ) + 4 / ( 9 * 0 ) % 2 ",
   "  6  +  (  8  -  7  )  +  4  /  (  9  *  0  )  %  2  ",
