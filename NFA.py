@@ -69,6 +69,39 @@ class StringRecognizer:
   def accepted_length(self):
     return self.nfa.accepted_length
 
+class IdentifierRecognizer:
+  def __init__(self):
+    # Define the NFA for recognizing strings
+    states = {'S', 'Mid', 'End'}
+    alphabet = set(chr(i) for i in range(0x110000)
+                   if len(unicodedata.name(chr(i), "")) > 0
+                      and unicodedata.category(chr(i)) not in ['Cc', 'Zl', 'Zp', 'Zs']
+                  )
+    only_letters = set(chr(i) for i in range(0x110000)
+                   if len(unicodedata.name(chr(i), "")) > 0
+                      and unicodedata.category(chr(i)) in ['Ll', 'Lm', 'Lo', 'Lt', 'Lu']
+                  )
+    transition_function = { }
+    # Add transitions so that we end 
+    for char in only_letters:
+      transition_function[('S', char)] = {'End'}
+      transition_function[('Mid', char)] = {'End'}
+      transition_function[('End', char)] = {'End'}
+    for char in alphabet - only_letters:
+      transition_function[('End', char)] = {'Mid'}
+      transition_function[('Mid', char)] = {'Mid'}
+
+    start_state = 'S'
+    accept_states = {'End'}
+
+    self.nfa = NFA(states, alphabet, transition_function, start_state, accept_states)
+    
+  def accepts(self, string):
+    return self.nfa.accepts(string)
+
+  def accepted_length(self):
+    return self.nfa.accepted_length
+
 class NumberRecognizer:
   def __init__(self):
     states = {'S', 'Sign', 'Pre' 'Int', 'Frac', 'Zero', 'Digit', 'FracDigit', 'Trailing'}
