@@ -1,3 +1,6 @@
+from enum import Enum
+Space = Enum("Space", "IGNORED WANTED".split())
+
 class DAWGNode:
   def __init__(self):
     self.children = {}
@@ -42,7 +45,7 @@ class DAWG:
   def accepted_length(self):
     return self.__accepted_length
 
-class KeywordAndTokenRecognizer:
+class KeywordAndPunctuationRecognizer:
   def __init__(self, words):
     self.dawg = DAWG(list(words))
 
@@ -51,6 +54,36 @@ class KeywordAndTokenRecognizer:
     
   def accepted_length(self):
     return self.dawg.accepted_length()
+
+class KeywordAndPunctuationTokenizer:
+  def __init__(self, words):
+    self.__data = words
+    self.dawg = DAWG(list(words.keys()))
+    
+  def accepts(self, text):
+    self.__accepted_length = 0
+    if self.dawg.accepts(text):
+      word = text[:self.dawg.accepted_length()]
+      # print(f'accepted: "{word}"')
+      (tok, space, extract) = self.__data[word]
+      space_ignored = space == Space.IGNORED
+      if len(text) == len(word) or space_ignored or text[len(word)] in [" ", "\n", ")"]:
+        self.__accepted_length = len(word)
+        self.__token = tok
+        if extract:
+          self.__extra = extract(word)
+        else:
+          self.__extra = None
+        return True
+      
+  def accepted_length(self):
+    return self.__accepted_length
+  
+  def token(self):
+    return self.__token
+  
+  def extra(self):
+    return self.__extra
 
 # keywords = {"function", "takes", "num", "bool", "if", "else"}
 # tokens = {":", "<", ">", "=", "<=", ">=", ":=", "{", "}", "(", ")"}

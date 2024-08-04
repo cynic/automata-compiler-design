@@ -1,71 +1,16 @@
 import NFA
 import DAWG
+from DAWG import Space
 from enum import Enum
 
 Token = Enum("Token", "FUNCTION IDENTIFIER BOOL_RELATION VALUE TYPE_SPECIFIER IF ELSE PARAMLIST ASSIGN COLON COMPARE BODY_OPEN BODY_CLOSE GROUP_OPEN GROUP_CLOSE OPERATOR".split())
 TokenMeta = Enum("TokenMeta", "STRING NUMBER BOOLEAN AND OR EQUAL NOT_EQUAL LESS_OR_EQUAL GREATER_OR_EQUAL LESS_THAN GREATER_THAN MULTIPLY ADD SUBTRACT DIVIDE REMAINDER".split())
-Space = Enum("Space", "IGNORED WANTED".split())
-
-class KeywordTokenizer:
-  def __init__(self, words):
-    self.__data = words
-    self.dawg = DAWG.DAWG(list(words.keys()))
-    
-  def accepts(self, text):
-    self.__accepted_length = 0
-    if self.dawg.accepts(text):
-      word = text[:self.dawg.accepted_length()]
-      # print(f'accepted: "{word}"')
-      (tok, space, extract) = self.__data[word]
-      space_ignored = space == Space.IGNORED
-      if len(text) == len(word) or space_ignored or text[len(word)] in [" ", "\n", ")"]:
-        self.__accepted_length = len(word)
-        self.__token = tok
-        if extract:
-          self.__extra = extract(word)
-        else:
-          self.__extra = None
-        return True
-      
-  def accepted_length(self):
-    return self.__accepted_length
-  
-  def token(self):
-    return self.__token
-  
-  def extra(self):
-    return self.__extra
-    
-class RecognizerToTokenizer:
-  def __init__(self, recognizer, token, extract):
-    self.__recognizer = recognizer
-    self.__token = token
-    self.__extract = extract
-    
-  def accepts(self, text):
-    self.__accepted_length = 0
-    if self.__recognizer.accepts(text):
-      self.__accepted_length = self.__recognizer.accepted_length()
-      if self.__extract:
-        self.__extra = self.__extract(text[:self.__accepted_length])
-      else:
-        self.__extra = None
-      return True
-    
-  def accepted_length(self):
-    return self.__accepted_length
-  
-  def token(self):
-    return self.__token
-  
-  def extra(self):
-    return self.__extra
     
 class Scanner:
   def __init__(self):
     # in order from MOST to LEAST specific
     self.tokenizers = \
-      [ KeywordTokenizer(
+      [ DAWG.KeywordAndPunctuationTokenizer(
             { "function": (Token.FUNCTION      , Space.WANTED  , None ),
               "string":   (Token.TYPE_SPECIFIER, Space.WANTED  , lambda x: {'kind': TokenMeta.STRING} ),
               "num":      (Token.TYPE_SPECIFIER, Space.WANTED  , lambda x: {'kind': TokenMeta.NUMBER} ),
@@ -95,9 +40,9 @@ class Scanner:
               "true":     (Token.VALUE         , Space.WANTED  , lambda x: {'kind': TokenMeta.BOOLEAN, 'value': True} ),
               "false":    (Token.VALUE         , Space.WANTED  , lambda x: {'kind': TokenMeta.BOOLEAN, 'value': False} )
             })
-      , RecognizerToTokenizer(NFA.StringRecognizer()    , Token.VALUE    , lambda x: {'kind': TokenMeta.STRING, 'value': x} )
-      , RecognizerToTokenizer(NFA.NumberRecognizer()    , Token.VALUE    , lambda x: {'kind': TokenMeta.NUMBER, 'value': int(x)} )
-      , RecognizerToTokenizer(NFA.IdentifierRecognizer(), Token.IDENTIFIER, lambda x: {'text': x})
+      , NFA.RecognizerToTokenizer(NFA.StringRecognizer()    , Token.VALUE    , lambda x: {'kind': TokenMeta.STRING, 'value': x} )
+      , NFA.RecognizerToTokenizer(NFA.NumberRecognizer()    , Token.VALUE    , lambda x: {'kind': TokenMeta.NUMBER, 'value': int(x)} )
+      , NFA.RecognizerToTokenizer(NFA.IdentifierRecognizer(), Token.IDENTIFIER, lambda x: {'text': x})
       ]
       
   def ellipsis(self, text):

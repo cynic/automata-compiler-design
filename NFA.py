@@ -194,6 +194,32 @@ class NumberRecognizer:
 
   def accepted_length(self):
     return self.nfa.accepted_length
+  
+class RecognizerToTokenizer:
+  def __init__(self, recognizer, token, extract):
+    self.__recognizer = recognizer
+    self.__token = token
+    self.__extract = extract
+    
+  def accepts(self, text):
+    self.__accepted_length = 0
+    if self.__recognizer.accepts(text):
+      self.__accepted_length = self.__recognizer.accepted_length()
+      if self.__extract:
+        self.__extra = self.__extract(text[:self.__accepted_length])
+      else:
+        self.__extra = None
+      return True
+    
+  def accepted_length(self):
+    return self.__accepted_length
+  
+  def token(self):
+    return self.__token
+  
+  def extra(self):
+    return self.__extra
+
 
 # USAGE / TESTING:
 # string_acceptor = StringRecognizer()
