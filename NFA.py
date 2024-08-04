@@ -196,25 +196,25 @@ class NumberRecognizer:
     return self.nfa.accepted_length
 
 # USAGE / TESTING:
-string_acceptor = StringRecognizer()
-test_strings = [
-  '"hello"', '"he said \\"hello\\""', '"escaped \\" quote"',
-  '"\\""', '"\\\\"', 'invalid', 'another "invalid" test',
-  '"Vعry 🥳 vαlid!"'
-  ]
-results = {string: string_acceptor.accepts(string) for string in test_strings}
+# string_acceptor = StringRecognizer()
+# test_strings = [
+#   '"hello"', '"he said \\"hello\\""', '"escaped \\" quote"',
+#   '"\\""', '"\\\\"', 'invalid', 'another "invalid" test',
+#   '"Vعry 🥳 vαlid!"'
+#   ]
+# results = {string: string_acceptor.accepts(string) for string in test_strings}
 
-# Output results
-for string, result in results.items():
-  print(f"String {string} is accepted: {result}")
+# # Output results
+# for string, result in results.items():
+#   print(f"String {string} is accepted: {result}")
 
-# (45 * (3 + 2) - (54 + 2)) / 2
+# # (45 * (3 + 2) - (54 + 2)) / 2
 
-num_acceptor = NumberRecognizer()
-# Test number
-test_nums = ['0', '1', '123', '+123', '-123', '+0', '-0', '+', '-', '0', '123.45', '123.450', '0123', '.45', '34.', '34.056', '304.56']
-results = {num: (True, num_acceptor.accepted_length()) if num_acceptor.accepts(num) else (False, None) for num in test_nums}
+# num_acceptor = NumberRecognizer()
+# # Test number
+# test_nums = ['0', '1', '123', '+123', '-123', '+0', '-0', '+', '-', '0', '123.45', '123.450', '0123', '.45', '34.', '34.056', '304.56']
+# results = {num: (True, num_acceptor.accepted_length()) if num_acceptor.accepts(num) else (False, None) for num in test_nums}
 
-# Output results
-for num, result in results.items():
-  print(f"Number {num} is accepted: {result[0]}, accepted length = {result[1]}")
+# # Output results
+# for num, result in results.items():
+#   print(f"Number {num} is accepted: {result[0]}, accepted length = {result[1]}")

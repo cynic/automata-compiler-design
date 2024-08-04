@@ -52,13 +52,13 @@ class KeywordAndTokenRecognizer:
   def accepted_length(self):
     return self.dawg.accepted_length()
 
-keywords = {"function", "takes", "num", "bool", "if", "else"}
-tokens = {":", "<", ">", "=", "<=", ">=", ":=", "{", "}", "(", ")"}
-keyword_acceptor = KeywordAndTokenRecognizer(keywords | tokens)
-test_keywords = [
-  "function", "hailstone", ":", "num",
-  "takes", "initial-value", "look-forward-by", "if"
-]
-results = {w: keyword_acceptor.accepts(w) for w in test_keywords}
-for word, result in results.items():
-  print(f"Keyword {word} is accepted: {result}")
+# keywords = {"function", "takes", "num", "bool", "if", "else"}
+# tokens = {":", "<", ">", "=", "<=", ">=", ":=", "{", "}", "(", ")"}
+# keyword_acceptor = KeywordAndTokenRecognizer(keywords | tokens)
+# test_keywords = [
+#   "function", "hailstone", ":", "num",
+#   "takes", "initial-value", "look-forward-by", "if"
+# ]
+# results = {w: keyword_acceptor.accepts(w) for w in test_keywords}
+# for word, result in results.items():
+#   print(f"Keyword {word} is accepted: {result}")

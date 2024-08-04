@@ -2,9 +2,10 @@ function hailstone : num takes initial-value : num look-forward-by : num {
   if initial-value <= 1 {
     1
   } else {
-    if look-forward-by <= 0 {
+    if look-forward-by <= 0 and (true or false) {
       initial-value
     } else {
+      testy := 1*2/3+4%5-(6*7/(8)-(9+2+1))
       next := {
         if initial-value % 2 = 0 {
           initial-value / 2
@@ -16,3 +17,4 @@ function hailstone : num takes initial-value : num look-forward-by : num {
     }
   }
 }
+hailstone 10 2
