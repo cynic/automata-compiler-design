@@ -87,20 +87,21 @@ class DPDA:
         self.stack.append(sym)
 
     # We have ended up… somewhere.
-    # If we now need to recognize something with a custom recognizer, do it.
-    if self.current_state in self.transitions and \
-       'recognizer' in self.transitions[self.current_state]:
-      # print(f"Using custom recognizer.")
-      custom = self.transitions[self.current_state]['recognizer']
-      result = custom.accepts(self.__input_string[self.__count-1:])
-      if not result:
-        # print(f"Rejected by inner recognizer: {input_string[self.__count-1:]}")
-        return False
-      else:
-        self.__skip = custom.accepted_length() - 1
-        return True
-    else:
-      return True
+    # # If we now need to recognize something with a custom recognizer, do it.
+    # if self.current_state in self.transitions and \
+    #    'recognizer' in self.transitions[self.current_state]:
+    #   # print(f"Using custom recognizer.")
+    #   custom = self.transitions[self.current_state]['recognizer']
+    #   result = custom.accepts(self.__input_string[self.__count-1:])
+    #   if not result:
+    #     # print(f"Rejected by inner recognizer: {input_string[self.__count-1:]}")
+    #     return False
+    #   else:
+    #     self.__skip = custom.accepted_length() - 1
+    #     return True
+    # else:
+    #   return True
+    return True
 
 class ArithmeticExpressionRecognizer:
   def __init__(self):
